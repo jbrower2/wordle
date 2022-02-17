@@ -1,0 +1,120 @@
+<html>
+	<head>
+		<title>Wordle Solver</title>
+		<style>
+			html,
+			body {
+				background-color: #121213;
+				color: #d7dadc;
+				font-family: Arial, Helvetica, sans-serif;
+			}
+			td {
+				width: 100px;
+				height: 100px;
+				font-size: 50px;
+				text-align: center;
+				text-transform: uppercase;
+				font-weight: bold;
+				background-color: #3a3a3c;
+			}
+			td.Y {
+				background-color: #6aaa64;
+			}
+			td.N {
+				background-color: #b59f3b;
+			}
+		</style>
+		<script src="data.js"></script>
+		<script>
+			function next() {
+				/** @type HTMLTableElement */
+				let table = window.TABLE;
+				if (!table) {
+					window.TABLE = table = document.createElement("table");
+					document.body.appendChild(table);
+				}
+
+				const rows = Array.from(table.querySelectorAll("tr"));
+				if (rows.length) {
+					const cells = Array.from(
+						rows[rows.length - 1].querySelectorAll("td")
+					);
+
+					function getCellValue({ classList }) {
+						return classList.contains("Y")
+							? "Y"
+							: classList.contains("N")
+							? "N"
+							: ".";
+					}
+					const r =
+						getCellValue(cells[0]) +
+						getCellValue(cells[1]) +
+						getCellValue(cells[2]) +
+						getCellValue(cells[3]) +
+						getCellValue(cells[4]);
+
+					if (r === "YYYYY") {
+						const m = "Already done";
+						alert(m);
+						return;
+					}
+
+					const newState = window.STATE[r];
+					if (!newState) {
+						const m = "Unexpected state: " + r;
+						alert(m);
+						throw new Error(m);
+					}
+
+					window.STATE = newState;
+
+					cells[5].innerHTML = "";
+				} else {
+					window.STATE = window.ROOT;
+				}
+
+				let done = false;
+				let word;
+				if (typeof window.STATE === "string") {
+					done = true;
+					word = window.STATE;
+				} else {
+					word = window.STATE.guess;
+				}
+
+				const tr = table.appendChild(document.createElement("tr"));
+				for (let i = 0; i < 5; i++) {
+					const td = tr.appendChild(document.createElement("td"));
+					td.innerText = word[i];
+					if (done) {
+						td.classList.add("Y");
+					} else {
+						td.onclick = () => {
+							if (td.classList.contains("Y")) {
+								td.classList.remove("Y");
+							} else if (td.classList.contains("N")) {
+								td.classList.remove("N");
+								td.classList.add("Y");
+							} else {
+								td.classList.add("N");
+							}
+						};
+					}
+				}
+
+				const td = tr.appendChild(document.createElement("td"));
+				if (!done) {
+					const button = td.appendChild(document.createElement("button"));
+					button.innerText = "Continue";
+					button.onclick = next;
+				}
+			}
+
+			window.onload = next;
+		</script>
+	</head>
+	<body>
+		<h1>Wordle Solver</h1>
+	</body>
+</html>

@@ -46,8 +46,6 @@ class State {
 	];
 	minCount = new Map();
 	maxCount = new Map();
-	final = FINAL;
-	valid = VALID;
 
 	addGuess(k, v) {
 		if (!(FINAL.includes(k) || VALID.includes(k))) {
@@ -93,7 +91,7 @@ class State {
 			this.maxCount.set(c, count.get(c) || 0);
 		}
 
-		const filter = (w) => {
+		return (w) => {
 			const count = new Map();
 			for (let i = 0; i < 5; i++) {
 				const c = w[i];
@@ -114,9 +112,6 @@ class State {
 
 			return true;
 		};
-
-		this.final = this.final.filter(filter);
-		this.valid = this.valid.filter(filter);
 	}
 
 	clone() {
@@ -152,38 +147,30 @@ function simulate(word, guess) {
 	return result.join("");
 }
 
-const guesses = new Map([
-	["arise", "xyxyy"],
-	// ["poopy", "xgyxx"],
-	// ["rural", "gxxxx"],
-]);
-
-let state = new State();
-for (const [k, v] of guesses) {
-	state.addGuess(k, v);
-}
-
 let num = 0;
 let bestGuess;
 let bestScore = Infinity;
-for (const arr of [state.final, state.valid]) {
+for (const arr of [FINAL, VALID]) {
 	for (const g of arr) {
 		num++;
 		let sum = 0;
-		for (const f of state.final) {
-			const newState = state.clone();
-			newState.addGuess(g, simulate(f, g));
-			sum += newState.final.length;
+		for (const f of FINAL) {
+			const newState = new State();
+			const filter = newState.addGuess(g, simulate(f, g));
+			for (const w of FINAL) {
+				if (filter(w)) {
+					sum++;
+				}
+			}
 		}
-		const avg = sum / state.final.length;
-		if (avg < bestScore) {
+		if (sum < bestScore) {
 			bestGuess = g;
-			bestScore = avg;
+			bestScore = sum;
 			console.log(
 				"improvement:",
 				g,
-				avg,
-				`(${num} / ${state.final.length + state.valid.length})`
+				sum,
+				`(${num} / ${FINAL.length + VALID.length})`
 			);
 		}
 	}
